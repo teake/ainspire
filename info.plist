@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>bundleid</key>
-	<string>hep.inspire</string>
+	<string>hep.ainspire</string>
 	<key>connections</key>
 	<dict>
 		<key>417EDFE4-EEA3-4586-BACB-72B5CD1488FA</key>
@@ -21,11 +21,11 @@
 	<key>createdby</key>
 	<string>Teake Nutma</string>
 	<key>description</key>
-	<string>Search InspireHep for papers</string>
+	<string>Search INSPIRE for papers</string>
 	<key>disabled</key>
 	<false/>
 	<key>name</key>
-	<string>Inspire</string>
+	<string>ainspire</string>
 	<key>objects</key>
 	<array>
 		<dict>
@@ -99,6 +99,6 @@ scriptfilter.main("{query}")
 		</dict>
 	</dict>
 	<key>webaddress</key>
-	<string></string>
+	<string>https://github.com/teake/ainspire</string>
 </dict>
 </plist>
