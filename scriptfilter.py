@@ -138,7 +138,7 @@ def context_menu(search=""):
 	# Link to the Inspire record page.
 	actions.append(
 		alp.Item(
-			title=item['title'],
+			title=item['title'].replace('\n',' '),
 			subtitle="Open Inspire record page",
 			arg=encode_arguments('inspirerecord',item['id']),
 			uid=bid+"inspirerecord"
@@ -279,7 +279,7 @@ def bibitem_to_alpitem(bib):
 
 	# Construct an alp item and return.
 	return alp.Item(
-		title			= bib['title'],
+		title			= bib['title'].replace('\n',' '),
 		subtitle		= subpre + authors_to_lastnames(bib['author']) + subpost,
 		valid			= "no", # This is to fake the contextual menu.
 		autocomplete	= bib['id'] + " " + alfred_delim # Same here.
