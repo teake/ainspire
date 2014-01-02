@@ -25,7 +25,7 @@
 	<key>disabled</key>
 	<false/>
 	<key>name</key>
-	<string>ainspire</string>
+	<string>ainspire v1.0</string>
 	<key>objects</key>
 	<array>
 		<dict>
@@ -84,7 +84,7 @@ scriptfilter.main("{query}")
 		</dict>
 	</array>
 	<key>readme</key>
-	<string></string>
+	<string>See https://github.com/teake/ainspire for more information.</string>
 	<key>uidata</key>
 	<dict>
 		<key>0AF6204E-C31F-4958-AB87-4A3585C12F18</key>

@@ -139,7 +139,7 @@ def context_menu(search=""):
 	actions.append(
 		alp.Item(
 			title=item['title'].replace('\n',' '),
-			subtitle="Open Inspire record page",
+			subtitle="Open Inspire record page in browser",
 			arg=encode_arguments('inspirerecord',item['id']),
 			uid=bid+"inspirerecord"
 		)
