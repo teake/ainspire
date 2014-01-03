@@ -21,7 +21,7 @@ def main(q):
 		webbrowser.open(v)
 
 	# Past to clipboard.
-	if t == 'clipboard':
+	elif t == 'clipboard':
 		import os
 		import alp
 		import subprocess
@@ -34,7 +34,7 @@ def main(q):
 		subprocess.call('pbcopy < "' + cpf + '"',shell=True)
 
 	# Lookup Inspire record.
-	if t == 'inspirerecord':
+	elif t == 'inspirerecord':
 
 		import urllib
 		import webbrowser
@@ -61,7 +61,7 @@ def main(q):
 		# Now open the URL.
  		webbrowser.open(recordurl)
 
- 	if t == 'clearcache':
+ 	elif t == 'clearcache':
 		import os
 		import alp
 

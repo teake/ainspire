@@ -14,13 +14,13 @@ def main(q=""):
 	if search == "clearcache":
 		result = clear_cache()
 	# Has the string no delimiter? Then perform a regular Inspire search.
-	if num_delims == 0:
+	elif num_delims == 0:
 		result = query_inspire(search)
 	# Is there one delimiter? Then it's a context menu.
-	if num_delims == 1:
+	elif num_delims == 1:
 		result = context_menu(search)
 	# Two delimiters? Then it's a author search menu.
-	if num_delims == 2:
+	elif num_delims == 2:
 		result = author_menu(search)
 
 	return alp.feedback(result)
