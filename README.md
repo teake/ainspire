@@ -64,14 +64,19 @@ obtained directly from the INSPIRE website, but is equivalent to it.
 Dependencies
 ------------
 
-`ainspire` uses the following non-standard Python libraries:
+`ainspire` needs the following Python libraries:
 
   * alp (https://github.com/phyllisstein/alp)
-  * bibtexparser (https://pypi.python.org/pypi/bibtexparser)
-  * bs4 (http://www.crummy.com/software/BeautifulSoup/)
+    for communicating with Alfred 
   * pyinspire (https://bitbucket.org/ihuston/pyinspire/)
+    for performing searches on INSPIRE
+  * bs4 (http://www.crummy.com/software/BeautifulSoup/)
+    because pyinspire needs it
+  * bibtexparser (https://pypi.python.org/pypi/bibtexparser)
+    for parsing BibTeX
 
-If you're checking out the source from Git, you need to include these libaries in the `ainspire`
+
+If you check out the source from Git, you need to include these libaries in the `ainspire`
 directory root in order obtain a working Alfred workflow. When you download the workflow from
 the [releases page](https://github.com/teake/ainspire/releases), this is not necessary.
 
