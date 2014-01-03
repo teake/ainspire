@@ -11,8 +11,8 @@ def main(q=""):
 	search = q.decode('utf-8').strip()
 	num_delims = search.count(alfred_delim)
 	# Clear the cache if the user wants to.
-	if search == "clearcache" or search == "clearcache.":
-		return clear_cache(search)
+	if search == "clearcache":
+		return clear_cache()
 	# Has the string no delimiter? Then perform a regular Inspire search.
 	if num_delims == 0:
 		return query_inspire(search)
@@ -28,29 +28,20 @@ def main(q=""):
 #
 
 
-def clear_cache(search=""):
-	"""Clears the cache."""
+def clear_cache():
+	"""Ask user to clear the cache."""
 	# Ask the user if he / she really wants to clear the cache.
-	if search[-1] != "." :
-		return alp.feedback(alp.Item(
-			title="Are you sure?",
-			subtitle="End with a full stop (.) to clear the cache",
-			valid="no",
-			autocomplete=search + "."
-		))
-	else:
-		import os
-		from alp.notification import Notification
-
-		# Remove files from folders. As long as alp returns the right directories,
-		# this should  be ok.
-		for folder in [alp.cache(),alp.storage()]:
-			for f in os.listdir(folder):
-				os.remove(os.path.join(folder, f))
-
-		# Issue a notification.
-		n = alp.notification.Notification()
-		n.notify("Cache cleared", "ainspire has cleared its cache", "")
+	return alp.feedback(alp.Item(
+			title="Clear the INSPIRE cache",
+			subtitle="Do you want to clear all cached INSPIRE searches?",
+			arg=encode_arguments(
+				type="clearcache",
+				notification={
+					'title':'Cache cleared',
+					'subtitle':'All saved INSPIRE results have been cleared'
+				}
+			)
+	))
 
 def query_inspire(search=""):
 	"""Searches Inspire."""
@@ -130,8 +121,8 @@ def query_inspire(search=""):
 			title="No results",
 			subtitle="Search on the Inspire website for " + q + ".",
 			arg=encode_arguments(
-				'url',
-				"http://inspirehep.net/search?ln=en&" + urllib.urlencode({'p':q})
+				type='url',
+				value="http://inspirehep.net/search?ln=en&" + urllib.urlencode({'p':q})
 			)
 		))
 
@@ -170,7 +161,7 @@ def context_menu(search=""):
 		alp.Item(
 			title=item['title'],
 			subtitle="Open Inspire record page in browser",
-			arg=encode_arguments('inspirerecord',item['id']),
+			arg=encode_arguments(type='inspirerecord',value=item['id']),
 			uid=bid+"inspirerecord"
 		)
 	)
@@ -205,7 +196,7 @@ def context_menu(search=""):
 			alp.Item(
 				title=bibitem_to_journaltext(item),
 				subtitle="Open DOI in browser",
-				arg=encode_arguments('url',url),
+				arg=encode_arguments(type='url',value=url),
 				uid=bid+"doi"
 			)
 		)
@@ -223,7 +214,7 @@ def context_menu(search=""):
 			alp.Item(
 				title=prefix + item['eprint'],
 				subtitle="Open PDF in browser",
-				arg=encode_arguments('url',url),
+				arg=encode_arguments(type='url',value=url),
 				uid=bid+"arxivpdf"
 			)
 		)
@@ -255,7 +246,14 @@ def context_menu(search=""):
 		alp.Item(
 			title="BibTeX",
 			subtitle="Copy BibTeX to clipboard",
-			arg=encode_arguments('clipboard',bibitem_to_bibtex(item),"BibTeX copied to clipboard"),
+			arg=encode_arguments(
+				type='clipboard',
+				value=bibitem_to_bibtex(item),
+				notification={
+					'title':'Copied BibTeX to clipboard',
+					'subtitle':'The BibTeX entry for ' + key + ' to the clipboard'
+				}
+			),
 			uid=bid+"bibtex"
 		)
 	)
@@ -373,7 +371,7 @@ def get_lastname(name):
 	return names[0]
 
 
-def encode_arguments(type="clipboard",value="",notification=""):
+def encode_arguments(type="clipboard",value="",notification={}):
 	"""Encodes arguments for Alfred that can be passed along to the action script"""
 	import json
 	import base64
