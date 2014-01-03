@@ -7,9 +7,12 @@ import alp
 alfred_delim = unicode("►",'utf-8')
 
 def main(q=""):
-	"""Main method."""
+	"""Refers to one of the main methods."""
 	search = q.decode('utf-8').strip()
 	num_delims = search.count(alfred_delim)
+	# Clear the cache if the user wants to.
+	if search == "clearcache" or search == "clearcache.":
+		return clear_cache(search)
 	# Has the string no delimiter? Then perform a regular Inspire search.
 	if num_delims == 0:
 		return query_inspire(search)
@@ -21,8 +24,33 @@ def main(q=""):
 		return author_menu(search)
 
 #
-# The two main sub functions are below.
+# The main functions are below.
 #
+
+
+def clear_cache(search=""):
+	"""Clears the cache."""
+	# Ask the user if he / she really wants to clear the cache.
+	if search[-1] != "." :
+		return alp.feedback(alp.Item(
+			title="Are you sure?",
+			subtitle="End with a full stop (.) to clear the cache",
+			valid="no",
+			autocomplete=search + "."
+		))
+	else:
+		import os
+		from alp.notification import Notification
+
+		# Remove files from folders. As long as alp returns the right directories,
+		# this should  be ok.
+		for folder in [alp.cache(),alp.storage()]:
+			for f in os.listdir(folder):
+				os.remove(os.path.join(folder, f))
+
+		# Issue a notification.
+		n = alp.notification.Notification()
+		n.notify("Cache cleared", "ainspire has cleared its cache", "")
 
 def query_inspire(search=""):
 	"""Searches Inspire."""
@@ -79,8 +107,10 @@ def query_inspire(search=""):
 		# Parse the BibTeX from the same file.
 		with open(tempf,"r") as f:
 			bp = BibTexParser(f)
-		# Get the bibtex as a dictionary.
+		# Get the bibtex as a dictionary and remove any newlines.
 		bibitems = bp.get_entry_dict()
+		for key in bibitems:
+			bibitems[key] = remove_newlines(bibitems[key])
 		# Save the dictionary to the cache file.
 		with open(savef,"w") as f:
 			json.dump(bibitems,f)
@@ -138,7 +168,7 @@ def context_menu(search=""):
 	# Link to the Inspire record page.
 	actions.append(
 		alp.Item(
-			title=item['title'].replace('\n',' '),
+			title=item['title'],
 			subtitle="Open Inspire record page in browser",
 			arg=encode_arguments('inspirerecord',item['id']),
 			uid=bid+"inspirerecord"
@@ -153,7 +183,7 @@ def context_menu(search=""):
 				title=item['author'],
 				subtitle="Find more papers of author",
 				valid="no",
-				autocomplete="find a "+ item['author'].replace('\n',' ') + ".",
+				autocomplete="find a "+ item['author'] + ".",
 				uid=bid+"authors"
 			)
 		)
@@ -163,7 +193,7 @@ def context_menu(search=""):
 				title=authors_to_lastnames(item['author']),
 				subtitle="Find more papers of authors",
 				valid="no",
-				autocomplete=search + " " + item['author'].replace('\n',' ') + " " + alfred_delim,
+				autocomplete=search + " " + item['author'] + " " + alfred_delim,
 				uid=bid+"authors"
 			)
 		)	
@@ -260,6 +290,12 @@ def author_menu(search=""):
 #
 # Auxiliary functions below.
 #
+
+def remove_newlines(bib):
+	"""Removes all newlines with spaces in the values of a dictionary result item"""
+	for key in bib:
+		bib[key] = bib[key].replace('\n',' ')
+	return bib
 
 def bibitem_to_alpitem(bib):
 	"""Converts a dictionary result item to an alp item"""
