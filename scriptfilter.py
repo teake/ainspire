@@ -12,16 +12,18 @@ def main(q=""):
 	num_delims = search.count(alfred_delim)
 	# Clear the cache if the user wants to.
 	if search == "clearcache":
-		return clear_cache()
+		result = clear_cache()
 	# Has the string no delimiter? Then perform a regular Inspire search.
 	if num_delims == 0:
-		return query_inspire(search)
+		result = query_inspire(search)
 	# Is there one delimiter? Then it's a context menu.
 	if num_delims == 1:
-		return context_menu(search)
+		result = context_menu(search)
 	# Two delimiters? Then it's a author search menu.
 	if num_delims == 2:
-		return author_menu(search)
+		result = author_menu(search)
+
+	return alp.feedback(result)
 
 #
 # The main functions are below.
@@ -31,7 +33,7 @@ def main(q=""):
 def clear_cache():
 	"""Ask user to clear the cache."""
 	# Ask the user if he / she really wants to clear the cache.
-	return alp.feedback(alp.Item(
+	return alp.Item(
 			title="Clear the INSPIRE cache",
 			subtitle="Do you want to clear all cached INSPIRE searches?",
 			arg=encode_arguments(
@@ -41,7 +43,7 @@ def clear_cache():
 					'subtitle':'All saved INSPIRE results have been cleared'
 				}
 			)
-	))
+	)
 
 def query_inspire(search=""):
 	"""Searches Inspire."""
@@ -49,12 +51,12 @@ def query_inspire(search=""):
 	# First check if the search query ends in "." (which marks a full query).
 	# If not, inform the user and offer to complete the query with a full stop.
 	if search[-1] != "." :
-		return alp.feedback(alp.Item(
+		return alp.Item(
 			title="Search for '" + search + "'",
 			subtitle="Or end the query with a full stop (.) to search",
 			valid="no",
 			autocomplete=search + "."
-		))
+		)
 	else:
 		q = search[:-1]
 
@@ -127,7 +129,7 @@ def query_inspire(search=""):
 		))
 
 	# And return feedback for Alfred.
-	return alp.feedback(alpitems)
+	return alpitems
 
 
 def context_menu(search=""):
@@ -259,7 +261,7 @@ def context_menu(search=""):
 	)
 
 	# And return.
-	return alp.feedback(actions)
+	return actions
 
 
 def author_menu(search=""):
@@ -283,7 +285,7 @@ def author_menu(search=""):
 		)
 
 	# And return.
-	return alp.feedback(actions)
+	return actions
 
 #
 # Auxiliary functions below.
