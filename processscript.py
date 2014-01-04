@@ -65,11 +65,15 @@ def main(q):
 		import os
 		import alp
 
-		# Remove files from folders. As long as alp returns the right directories,
-		# this should be ok.
-		for folder in [alp.cache(),alp.storage()]:
-			for f in os.listdir(folder):
-				os.remove(os.path.join(folder, f))
+		# Remove cache files from storage folder.
+		for f in os.listdir(alp.storage()):
+			file_path = os.path.join(alp.storage(), f)
+			try:
+				if os.path.isfile(file_path):
+					if os.path.splitext(f)[-1] == ".cache":
+						os.remove(file_path)
+			except Exception, e:
+				print e
 
 
  	# If the notification is not empty, issue it.

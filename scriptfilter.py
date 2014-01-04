@@ -34,7 +34,7 @@ def clear_cache():
 	"""Ask user to clear the cache."""
 	# Ask the user if he / she really wants to clear the cache.
 	return alp.Item(
-			title="Clear the INSPIRE cache",
+			title="Clear INSPIRE cache",
 			subtitle="Do you want to clear all cached INSPIRE searches?",
 			arg=encode_arguments(
 				type="clearcache",
@@ -71,7 +71,7 @@ def query_inspire(search=""):
 	# Path for the temporary latest parsed results.
 	lastf = os.path.join(alp.cache(),"lastresults.json")
 	# Path for the permanent cache of the query. Note the urlsafe encode.
-	savef = os.path.join(alp.storage(),base64.urlsafe_b64encode(q))
+	savef = os.path.join(alp.storage(),base64.urlsafe_b64encode(q) + ".cache")
 
 	# Check if cache file exists, and if it's not older than a week.
 	try:
