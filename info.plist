@@ -25,7 +25,7 @@
 	<key>disabled</key>
 	<false/>
 	<key>name</key>
-	<string>ainspire v1.0</string>
+	<string>ainspire v1.1</string>
 	<key>objects</key>
 	<array>
 		<dict>
@@ -60,16 +60,16 @@ processscript.main("{query}")
 				<key>keyword</key>
 				<string>insp</string>
 				<key>runningsubtext</key>
-				<string>Make sure your query ends with '.'</string>
+				<string>Searching ...</string>
 				<key>script</key>
 				<string>import scriptfilter
 
 scriptfilter.main("{query}")
 </string>
 				<key>subtext</key>
-				<string>Search Inspire for papers</string>
+				<string>Search INSPIRE for papers</string>
 				<key>title</key>
-				<string>Search Inspire</string>
+				<string>Search INSPIRE</string>
 				<key>type</key>
 				<integer>3</integer>
 				<key>withspace</key>

@@ -40,7 +40,7 @@ def clear_cache():
 				type="clearcache",
 				notification={
 					'title':'Cache cleared',
-					'subtitle':'All saved INSPIRE results have been cleared'
+					'text':'All saved INSPIRE results have been cleared'
 				}
 			)
 	)
@@ -52,8 +52,8 @@ def query_inspire(search=""):
 	# If not, inform the user and offer to complete the query with a full stop.
 	if search[-1] != "." :
 		return alp.Item(
-			title="Search for '" + search + "'",
-			subtitle="Or end the query with a full stop (.) to search",
+			title="Search INSPIRE for '" + search + "'",
+			subtitle="Hit enter or end the query with a full stop (.) to search",
 			valid="no",
 			autocomplete=search + "."
 		)
@@ -253,7 +253,7 @@ def context_menu(search=""):
 				value=bibitem_to_bibtex(item),
 				notification={
 					'title':'Copied BibTeX to clipboard',
-					'subtitle':'The BibTeX entry for ' + key + ' to the clipboard'
+					'text':'The BibTeX entry for ' + key + ' to the clipboard'
 				}
 			),
 			uid=bid+"bibtex"
@@ -341,10 +341,14 @@ def bibitem_to_journaltext(bib):
 def bibitem_to_bibtex(bib):
 	"""Converts a dictionary result item to bibtex"""
 	bibtex = "@" + bib['type'] + "{" + bib['id'] + "\n"
+	max_len = 0
+	for key in bib:
+		if len(key) > max_len:
+			max_len = len(key)
 	for key in bib:
 		if key == 'type' or key == 'id':
 			continue
-		bibtex += "      " + key + " = "
+		bibtex += "      " + key + ( (max_len - len(key)) * " " ) + " = "
 		if(key == 'title'):
 			bibtex += '"{'+bib[key]+'}"'
 		else:
