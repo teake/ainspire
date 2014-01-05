@@ -101,9 +101,7 @@ def query_inspire(search=""):
 		with open(tempf,"r") as f:
 			bp = BibTexParser(f)
 		# Get the bibtex as a dictionary and remove any newlines.
-		bibitems = bp.get_entry_dict()
-		for key in bibitems:
-			bibitems[key] = remove_newlines(bibitems[key])
+		bibitems = map(remove_newlines,bp.get_entry_list())
 		# Save the dictionary to the cache file.
 		with open(savef,"w") as f:
 			json.dump(bibitems,f)
@@ -112,16 +110,14 @@ def query_inspire(search=""):
 	shutil.copy(savef,lastf)
 
 	# Parse the result dictionary to alp items.
-	alpitems = []
-	for key in bibitems:
-		alpitems.append(bibitem_to_alpitem(bibitems[key]))
+	alpitems = map(bibitem_to_alpitem, bibitems)
 
 	# No results? Then tell the user, and offer to search the Inspire website.
 	if len(alpitems) == 0:
 		import urllib
 		alpitems.append(alp.Item(
 			title="No results",
-			subtitle="Search on the Inspire website for " + q + ".",
+			subtitle="Search on the INSPIRE website for " + q + ".",
 			arg=encode_arguments(
 				type='url',
 				value="http://inspirehep.net/search?ln=en&" + urllib.urlencode({'p':q})
@@ -147,13 +143,17 @@ def context_menu(search=""):
 	# Load the parsed results from the latest Inspire search.
 	lastf = os.path.join(alp.cache(),"lastresults.json")
 	with open(lastf,"r") as f:
-		dicts = json.load(f)
+		items = json.load(f)
 
 	# Get the key from the search query.
 	key = search.split(alfred_delim)[0].strip()
 
 	# Lookup the item from the results.
-	item = dicts[key]
+	for i in items:
+		if 'id' in i:
+			if i['id'] == key:
+				item = i
+				break
 
 	# Populate the context menu action list.
 	actions = []
