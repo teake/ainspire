@@ -340,7 +340,7 @@ def bibitem_to_journaltext(bib):
 
 def bibitem_to_bibtex(bib):
 	"""Converts a dictionary result item to bibtex"""
-	bibtex = "@" + bib['type'] + "{" + bib['id'] + "\n"
+	bibtex = "@" + bib['type'] + "{" + bib['id'] + ",\n"
 	max_len = 0
 	for key in bib:
 		if len(key) > max_len:
