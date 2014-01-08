@@ -267,22 +267,31 @@ def context_menu(search=""):
 def author_menu(search=""):
 	"""Returns an Alfred context menu populated with authors"""
 
+	searchsplit = search.split(alfred_delim)
+	# Get the bib id
+	bibid		= searchsplit[0].strip()
 	# Get the string containing all authors.
-	authors 	= search.split(alfred_delim)[1].strip()
+	authors 	= searchsplit[1].strip()
 	# Split the string into single authors.
 	authorlist 	= authors.split(" and ")
 
 	# Populate the action list.
 	actions = []
 	for a in authorlist:
-		actions.append(
-			alp.Item(
+		if a == "others":
+			aitem = alp.Item(
+				title="More authors",
+				subtitle="Open the INSPIRE page for all authors of the paper",
+				arg=encode_arguments(type='inspirerecord',value=bibid)
+			)
+		else:
+			aitem = alp.Item(
 				title=a,
 				subtitle="Find more papers of author",
 				valid="no",
 				autocomplete="find a "+ a + "."
 			)
-		)
+		actions.append(aitem)
 
 	# And return.
 	return actions
