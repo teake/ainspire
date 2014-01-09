@@ -75,6 +75,15 @@ def main(q):
 			except Exception, e:
 				print e
 
+	elif t == 'setlocaldir':
+		import alp
+
+		settings = alp.Settings()
+		settings.set(local_dir=v)
+
+	elif t == 'open':
+		import os
+		os.system("open '" + v + "'")
 
  	# If the notification is not empty, issue it.
 	if n != {}:

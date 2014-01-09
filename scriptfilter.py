@@ -3,16 +3,38 @@
 
 import alp
 
+settings = alp.Settings()
+
 # Set the delimiter for faking a context menu in Alfred.
-alfred_delim = unicode("►",'utf-8')
+alfred_delim = unicode(" ► ",'utf-8')
 
 def main(q=""):
 	"""Refers to one of the main methods."""
-	search = q.decode('utf-8').strip()
-	num_delims = search.count(alfred_delim)
-	# Clear the cache if the user wants to.
-	if search == "clearcache":
-		result = clear_cache()
+
+	search 		= q.decode('utf-8')
+	num_delims 	= search.count(alfred_delim)
+	searchsplit = search.split(alfred_delim)
+
+	# If the user hasn't typed anything, give some instructions and the
+	# option to open the settings menu.
+	if search.strip() == "":
+		result = [
+			alp.Item(
+				title="Search INSPIRE",
+				subtitle="Begin typing to search INSPIRE",
+				valid="no",
+				autocomplete=""
+			),
+			alp.Item(
+				title="Settings",
+				subtitle="Change ainspire's settings",
+				valid="no",
+				autocomplete="settings" + alfred_delim
+			)
+		]
+	# Settings menu.
+	elif searchsplit[0] == "settings":
+		result = settings_menu(searchsplit[1:])
 	# Has the string no delimiter? Then perform a regular Inspire search.
 	elif num_delims == 0:
 		result = query_inspire(search)
@@ -26,16 +48,26 @@ def main(q=""):
 	return alp.feedback(result)
 
 #
-# The main functions are below.
+# Functions for accessing and changing settings
 #
 
+def settings_menu(q={}):
+	"""Returns a settings menu."""
+	# Main settings
+	if q[0] == "":
+		return main_settings()
+	# Dialog for changing the directory
+	if q[0] == "setdir":
+		return set_local_dir(q[1])
 
-def clear_cache():
-	"""Ask user to clear the cache."""
-	# Ask the user if he / she really wants to clear the cache.
-	return alp.Item(
+def main_settings():
+	"""Returns the main settings menu"""
+	menuitems = []
+	# Option to clear the cache.
+	menuitems.append(
+		alp.Item(
 			title="Clear INSPIRE cache",
-			subtitle="Do you want to clear all cached INSPIRE searches?",
+			subtitle="Clears all cached INSPIRE searches",
 			arg=encode_arguments(
 				type="clearcache",
 				notification={
@@ -43,7 +75,97 @@ def clear_cache():
 					'text':'All saved INSPIRE results have been cleared'
 				}
 			)
+		)
 	)
+	# Option to change the local directory
+	menuitems.append(
+		alp.Item(
+			title="Set local directory",
+			subtitle="Set the local directory where PDFs are stored",
+			valid="no",
+			autocomplete="settings" + alfred_delim + "setdir" + alfred_delim
+		)		
+	)
+
+	return menuitems
+
+def set_local_dir(q=""):
+	"""Sets the local directory"""
+	import os
+
+	actions = []
+
+	# Use mdfind to search for a directory within ~/
+	if q=="":
+		actions.append(alp.Item(
+			title="Begin typing to search for a directory",
+			subtitle="All directories in " + os.path.expanduser("~") +" will be searched",
+			valid="no"
+		))
+	else:
+		mdfindresults = alp.find("-onlyin ~ 'kMDItemFSName=\"*"+q+"*\"c && kMDItemContentType==public.folder'")
+		for mdfindresult in mdfindresults:
+			actions.append(
+				alp.Item(
+					title=mdfindresult,
+					subtitle="Set the local directory to " + mdfindresult,
+					arg=encode_arguments(
+						type="setlocaldir",
+						value=mdfindresult,
+						notification={
+							'title':'Local directory changed',
+							'text':'Local directory set to ' + mdfindresult
+						}
+					)
+				)
+			)
+
+	# Also remind the user what the current directory is.
+	actions.append(alp.Item(
+		title="Current local directory",
+		subtitle=get_local_dir(),
+		valid="no" 
+	))
+
+	return actions
+
+
+def get_local_dir():
+	"""Returns the local directory for searching PDFs"""
+	import os
+	return settings.get("local_dir", default=os.path.expanduser("~/Papers"))
+
+
+
+#
+# The main functions are below.
+#
+
+def local_search(search=""):
+	"""Performs a local search"""
+
+	import os
+
+	words = search.split(" ")
+	mdquery = "true"
+	for word in words:
+		mdquery += ' && kMDItemFSName="*'+word+'*.pdf"c'
+	mdfindresults = alp.find("-onlyin '" + get_local_dir() + "' '" + mdquery + "'")
+	fileitems = []
+	for mdfindresult in mdfindresults:
+		fileitems.append(alp.Item(
+			title=os.path.splitext(os.path.basename(mdfindresult))[0],
+			subtitle=mdfindresult,
+			arg=encode_arguments(
+				type="open",
+				value=mdfindresult
+			),
+			type='file',
+			icon="com.adobe.pdf",
+			fileType=True,
+			uid=mdfindresult
+		))
+	return fileitems
 
 def query_inspire(search=""):
 	"""Searches Inspire."""
@@ -51,12 +173,12 @@ def query_inspire(search=""):
 	# First check if the search query ends in "." (which marks a full query).
 	# If not, inform the user and offer to complete the query with a full stop.
 	if search[-1] != "." :
-		return alp.Item(
+		return local_search(search) + [alp.Item(
 			title="Search INSPIRE for '" + search + "'",
-			subtitle="Hit enter or end the query with a full stop (.) to search",
+			subtitle="End the query with a full stop (.) to search INSPIRE",
 			valid="no",
 			autocomplete=search + "."
-		)
+		)]
 	else:
 		q = search[:-1]
 
@@ -117,7 +239,7 @@ def query_inspire(search=""):
 		import urllib
 		alpitems.append(alp.Item(
 			title="No results",
-			subtitle="Search on the INSPIRE website for " + q + ".",
+			subtitle="Search on the INSPIRE website for '" + q + "'",
 			arg=encode_arguments(
 				type='url',
 				value="http://inspirehep.net/search?ln=en&" + urllib.urlencode({'p':q})
@@ -186,7 +308,7 @@ def context_menu(search=""):
 				title=authors_to_lastnames(item['author']),
 				subtitle="Find more papers of authors",
 				valid="no",
-				autocomplete=search + " " + item['author'] + " " + alfred_delim,
+				autocomplete=search + " " + item['author'] + alfred_delim,
 				uid=bid+"authors"
 			)
 		)	
@@ -327,7 +449,7 @@ def bibitem_to_alpitem(bib):
 		title			= bib['title'].replace('\n',' '),
 		subtitle		= subpre + authors_to_lastnames(bib['author']) + subpost,
 		valid			= "no", # This is to fake the contextual menu.
-		autocomplete	= bib['id'] + " " + alfred_delim # Same here.
+		autocomplete	= bib['id'] + alfred_delim # Same here.
 	)
 
 
