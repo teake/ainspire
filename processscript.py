@@ -88,7 +88,8 @@ def main(q):
 	elif t == 'getpdf':
 		import urllib
 		import os
-		urllib.urlretrieve(v[0],v[1])
+		if not os.path.isfile(v[1]):
+			urllib.urlretrieve(v[0],v[1])
 		os.system("open '" + v[1] + "'")
 
  	# If the notification is not empty, issue it.
