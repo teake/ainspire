@@ -59,6 +59,8 @@ def settings_menu(q={}):
 	# Dialog for changing the directory
 	if q[0] == "setdir":
 		return set_local_dir(q[1])
+	if q[0] == "setcache":
+		return set_cache(q[1])
 
 def main_settings():
 	"""Returns the main settings menu"""
@@ -77,17 +79,75 @@ def main_settings():
 			)
 		)
 	)
+
+	# Option to change the cache setting
+	menuitems.append(
+		alp.Item(
+			title="Change cache setting",
+			subtitle="Set the time INSPIRE searches are cached",
+			valid="no",
+			autocomplete="settings" + alfred_delim + "setcache" + alfred_delim
+		)		
+	)
+
+	# Option to toggle the local search
+	local_search_setting = get_local_search_setting()
+	if local_search_setting:
+		titlepre = "Disable"
+		subtitle = "Only give results from INSPIRE"
+	else:
+		titlepre = "Enable"
+		subtitle = "Search local directory for PDFs before completing queries with '.'"
+	menuitems.append(
+		alp.Item(
+			title=titlepre + " local search",
+			subtitle=subtitle,
+			arg=encode_arguments(
+				type="setting",
+				value={'local_search':not local_search_setting},
+				notification={
+					'title':'Setting changed',
+					'text':titlepre+'d local search'
+				}
+			)
+		)		
+	)
+
 	# Option to change the local directory
 	menuitems.append(
 		alp.Item(
-			title="Set local directory",
-			subtitle="Set the local directory where PDFs are stored",
+			title="Change local directory",
+			subtitle="Set local directory where PDFs are stored and searched",
 			valid="no",
 			autocomplete="settings" + alfred_delim + "setdir" + alfred_delim
 		)		
 	)
 
 	return menuitems
+
+def set_cache(q=""):
+	if q=="":
+		return alp.Item(
+			title="Begin typing to set the cache timeout",
+			subtitle="Current value is " + str(get_cache_setting()) + " days",
+			valid="no"
+		)
+	try:
+		s=str(int(q))
+	except:
+		s="0"
+	return alp.Item(
+		title="Set cache timeout to " + s + " days",
+		subtitle="Current value is " + str(get_cache_setting()) + " days",
+		arg=encode_arguments(
+			type="setting",
+			value={'cache':int(s)},
+			notification={
+				'title':'Setting changed',
+				'text':'Cache timeout set to ' + s + ' days'
+			}
+		)
+	)
 
 def set_local_dir(q=""):
 	"""Sets the local directory"""
@@ -131,14 +191,18 @@ def set_local_dir(q=""):
 
 
 def get_local_dir():
-	"""Returns the local directory for searching PDFs"""
+	"""Returns the local directory for storing and searching PDFs"""
 	import os
-	localdir = settings.get("local_dir", default=os.path.expanduser("~/Papers"))
+	localdir = settings.get("local_dir", default=os.path.expanduser("~/Downloads"))
 	if not os.path.exists(localdir):
 		os.makedirs(localdir)
 	return localdir
 
+def get_local_search_setting():
+	return settings.get("local_search", default=False)
 
+def get_cache_setting():
+	return settings.get("cache", default=7)
 
 #
 # The main functions are below.
@@ -146,6 +210,9 @@ def get_local_dir():
 
 def local_search(search=""):
 	"""Performs a local search"""
+
+	if not get_local_search_setting():
+		return []
 
 	import os
 
@@ -206,8 +273,8 @@ def query_inspire(search=""):
 		mt = os.path.getmtime(savef)
 		# Get the current time.
 		ct = time.time()
-		# Is the difference in time less than a week? Then use it as cache.
-		usecache =  ct - mt < 604800
+		# Is the difference in time less a number of days? Then use it as cache.
+		usecache =  ct - mt < ( get_cache_setting() * 86400 )
 	except:
 		# If the above fails (e.g. when the file doesn't exist), don't use cache.
 		usecache = False
