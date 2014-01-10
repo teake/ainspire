@@ -133,7 +133,10 @@ def set_local_dir(q=""):
 def get_local_dir():
 	"""Returns the local directory for searching PDFs"""
 	import os
-	return settings.get("local_dir", default=os.path.expanduser("~/Papers"))
+	localdir = settings.get("local_dir", default=os.path.expanduser("~/Papers"))
+	if not os.path.exists(localdir):
+		os.makedirs(localdir)
+	return localdir
 
 
 
@@ -153,9 +156,11 @@ def local_search(search=""):
 	mdfindresults = alp.find("-onlyin '" + get_local_dir() + "' '" + mdquery + "'")
 	fileitems = []
 	for mdfindresult in mdfindresults:
+		filename = os.path.splitext(os.path.basename(mdfindresult))[0]
+		filenamesplit = filename.split(" - ")
 		fileitems.append(alp.Item(
-			title=os.path.splitext(os.path.basename(mdfindresult))[0],
-			subtitle=mdfindresult,
+			title=filenamesplit[1],
+			subtitle=filenamesplit[0],
 			arg=encode_arguments(
 				type="open",
 				value=mdfindresult
@@ -436,7 +441,9 @@ def bibitem_to_alpitem(bib):
 	"""Converts a dictionary result item to an alp item"""
 
 	# Prepend the year to the subtitle if it's there.
-	if 'year' in bib:
+	if 'eprint' in bib:
+		subpre = bib['eprint'] + " "
+	elif 'year' in bib:
 		subpre = bib['year'] + " "
 	else:
 		subpre = ""
