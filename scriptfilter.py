@@ -110,10 +110,10 @@ def set_local_dir(q=""):
 					title=mdfindresult,
 					subtitle="Set the local directory to " + mdfindresult,
 					arg=encode_arguments(
-						type="setlocaldir",
-						value=mdfindresult,
+						type="setting",
+						value={'local_dir':mdfindresult},
 						notification={
-							'title':'Local directory changed',
+							'title':'Setting changed',
 							'text':'Local directory set to ' + mdfindresult
 						}
 					)
@@ -334,11 +334,15 @@ def context_menu(search=""):
 			urlprefix = ""
 			prefix = 'arXiv:'
 		url = "http://arxiv.org/pdf/" + urlprefix + item['eprint']
+		filename = os.path.join(
+			get_local_dir(),
+			(item['eprint'] + " " + authors_to_lastnames(item['author']) + " - " + item['title'] + '.pdf').replace('/','_').replace(':','_')
+		)
 		actions.append(
 			alp.Item(
 				title=prefix + item['eprint'],
-				subtitle="Open PDF in browser",
-				arg=encode_arguments(type='url',value=url),
+				subtitle="Download and open PDF",
+				arg=encode_arguments(type='getpdf',value=[url,filename]),
 				uid=bid+"arxivpdf"
 			)
 		)

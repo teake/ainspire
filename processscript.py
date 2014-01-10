@@ -75,15 +75,21 @@ def main(q):
 			except Exception, e:
 				print e
 
-	elif t == 'setlocaldir':
+	elif t == 'setting':
 		import alp
 
 		settings = alp.Settings()
-		settings.set(local_dir=v)
+		settings.set(**v)
 
 	elif t == 'open':
 		import os
 		os.system("open '" + v + "'")
+
+	elif t == 'getpdf':
+		import urllib
+		import os
+		urllib.urlretrieve(v[0],v[1])
+		os.system("open '" + v[1] + "'")
 
  	# If the notification is not empty, issue it.
 	if n != {}:
