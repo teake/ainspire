@@ -51,13 +51,6 @@ def main(q=""):
     return alp.feedback(result)
 
 
-def typing_menu(search=""):
-    return alp.Item(
-        title        = "Search INSPIRE for '" + search + "'",
-        subtitle     = "Action this item to search INSPIRE",
-        valid        = "no",
-        autocomplete = search + alfred_delim
-    )
 #
 # Functions for accessing and changing settings
 #
@@ -246,6 +239,43 @@ def local_search(search=""):
     ))
     # And return.
     return alp.feedback(fileitems)
+
+def typing_menu(search=""):
+    import os
+    import base64
+
+    searchlower = search.lower().strip()
+    words       = searchlower.split(" ")
+
+    # List all previous searches (i.e. all cache files)
+    prevsearches = []
+    for f in os.listdir(alp.storage()):
+        filename, ext = os.path.splitext(f)
+        if ext == ".cache":
+            prevsearch      = base64.urlsafe_b64decode(filename)
+            prevsearchlower = prevsearch.lower()
+            # Search for the words in the input query
+            if searchlower == prevsearchlower:
+                continue
+            match = True
+            for word in words:
+                if word not in prevsearchlower:
+                    match = False
+                    break
+            if not match:
+                continue
+            prevsearches.append(alp.Item(
+                title        = "'" + prevsearch + "'",
+                subtitle     = "Recall stored INSPIRE search '" + prevsearch + "'",
+                valid        = "no",
+                autocomplete = prevsearch + alfred_delim
+            ))
+    return [alp.Item(
+        title        = "Search INSPIRE for '" + search + "'",
+        subtitle     = "Search INSPIRE for the current query",
+        valid        = "no",
+        autocomplete = search + alfred_delim
+    )] + prevsearches
 
 def inspire_search(search=""):
     """Searches Inspire."""
