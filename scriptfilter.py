@@ -40,7 +40,7 @@ def main(q=""):
         result = typing_menu(searchsplit[0])
     # Has the string one delimiter? Then perform a regular Inspire search.
     elif num_delims == 1:
-        result = search_inspire(searchsplit[0].strip())
+        result = inspire_search(searchsplit[0].strip())
     # Are there two delimiters? Then it's a context menu.
     elif num_delims == 2:
         result = context_menu(searchsplit[1],searchsplit[0])
@@ -222,19 +222,32 @@ def get_cache_setting():
 def local_search(search=""):
     """Performs a local search"""
 
-    if not get_local_search_setting():
-        return []
-
     import os
 
-    words   = search.split(" ")
-    mdquery = "true"
-    for word in words:
-        mdquery += ' && kMDItemFSName="*'+word+'*.pdf"c'
-    mdfindresults = alp.find("-onlyin '" + get_local_dir() + "' '" + mdquery + "'")
-    fileitems = []
-    for mdfindresult in mdfindresults:
-        filename = os.path.splitext(os.path.basename(mdfindresult))[0]
+    words       = search.lower().split(" ")
+    ldir        = get_local_dir()
+    files       = []
+    fileitems   = []
+
+    # Get all files in the local directory.
+    for (dirpath, dirnames, filenames) in os.walk(ldir):
+        files.extend(filenames)
+        break
+    # Loop over them to fill 'fileitems'.
+    for f in files:
+        filename, ext = os.path.splitext(f)
+        filenamelower = filename.lower()
+        if ext != ".pdf":
+            continue
+        # Search for the words in the input query
+        match = True
+        for word in words:
+            if word not in filenamelower:
+                match = False
+                break
+        if not match:
+            continue
+        # Make the alp item.
         filenamesplit = filename.split(" - ")
         fileitems.append(alp.Item(
             title    = filenamesplit[1],
@@ -242,15 +255,25 @@ def local_search(search=""):
             type     = 'file',
             icon     = "com.adobe.pdf",
             fileType = True,
-            uid      = mdfindresult,
+            uid      = filename,
             arg      = encode_arguments(
                 type    = "open",
-                value   = mdfindresult
+                value   = os.path.join(ldir, f)
             )
         ))
-    return fileitems
+    # Lastly, append an alp item that searches INSPIRE
+    fileitems.append(alp.Item(
+        title    = "Search INSPIRE for '" + search + "'",
+        subtitle = "Searches the INSPIRE database",
+        arg      = encode_arguments(
+            type    = "inspiresearch",
+            value   = search 
+        )
+    ))
+    # And return.
+    return alp.feedback(fileitems)
 
-def search_inspire(search=""):
+def inspire_search(search=""):
     """Searches Inspire."""
 
     import time

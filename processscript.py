@@ -73,7 +73,7 @@ def main(q):
                     if os.path.splitext(f)[-1] == ".cache":
                         os.remove(file_path)
             except Exception, e:
-                print e
+                pass
 
     elif t == 'setting':
         import alp
@@ -91,6 +91,16 @@ def main(q):
         if not os.path.isfile(v[1]):
             urllib.urlretrieve(v[0],v[1])
         os.system("open '" + v[1] + "'")
+
+    elif t == 'inspiresearch':
+        import sys
+        import os
+        import plistlib
+        # Get the keyword for the INSPIRE search. This is pretty fragile ...
+        info    = plistlib.readPlist(os.path.abspath("./info.plist"))
+        kw      = info["objects"][0]["config"]["keyword"]
+        # Print to stdout because 'print' prints a newline (which we don't want).
+        sys.stdout.write(kw + ' ' + v)
 
     # If the notification is not empty, issue it.
     if n != {}:

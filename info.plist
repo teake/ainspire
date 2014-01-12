@@ -6,7 +6,29 @@
 	<string>hep.ainspire</string>
 	<key>connections</key>
 	<dict>
+		<key>0AF6204E-C31F-4958-AB87-4A3585C12F18</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>66C33713-DA10-4119-A3C8-750DB7D93EAA</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+			</dict>
+		</array>
 		<key>417EDFE4-EEA3-4586-BACB-72B5CD1488FA</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>0AF6204E-C31F-4958-AB87-4A3585C12F18</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+			</dict>
+		</array>
+		<key>4765E242-93FF-46C4-87F9-224040053329</key>
 		<array>
 			<dict>
 				<key>destinationuid</key>
@@ -28,28 +50,6 @@
 	<string>ainspire v1.1</string>
 	<key>objects</key>
 	<array>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>escaping</key>
-				<integer>36</integer>
-				<key>script</key>
-				<string>import processscript
-
-processscript.main("{query}")
-
-	
-</string>
-				<key>type</key>
-				<integer>3</integer>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.action.script</string>
-			<key>uid</key>
-			<string>0AF6204E-C31F-4958-AB87-4A3585C12F18</string>
-			<key>version</key>
-			<integer>0</integer>
-		</dict>
 		<dict>
 			<key>config</key>
 			<dict>
@@ -82,6 +82,76 @@ scriptfilter.main("{query}")
 			<key>version</key>
 			<integer>0</integer>
 		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>escaping</key>
+				<integer>36</integer>
+				<key>script</key>
+				<string>import processscript
+
+processscript.main("{query}")</string>
+				<key>type</key>
+				<integer>3</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>0AF6204E-C31F-4958-AB87-4A3585C12F18</string>
+			<key>version</key>
+			<integer>0</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>escaping</key>
+				<integer>36</integer>
+				<key>script</key>
+				<string>set temp to "{query}"
+if temp is not "" then
+	tell application "Alfred 2" to search temp &amp; " ► "
+end if</string>
+				<key>type</key>
+				<integer>6</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.output.script</string>
+			<key>uid</key>
+			<string>66C33713-DA10-4119-A3C8-750DB7D93EAA</string>
+			<key>version</key>
+			<integer>0</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>argumenttype</key>
+				<integer>0</integer>
+				<key>escaping</key>
+				<integer>36</integer>
+				<key>keyword</key>
+				<string>paper</string>
+				<key>runningsubtext</key>
+				<string>Searching ...</string>
+				<key>script</key>
+				<string>import scriptfilter
+
+scriptfilter.local_search("{query}")</string>
+				<key>subtext</key>
+				<string>Search papers locally stored by ainspire</string>
+				<key>title</key>
+				<string>Search papers</string>
+				<key>type</key>
+				<integer>3</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>4765E242-93FF-46C4-87F9-224040053329</string>
+			<key>version</key>
+			<integer>0</integer>
+		</dict>
 	</array>
 	<key>readme</key>
 	<string>See https://github.com/teake/ainspire for more information.</string>
@@ -90,12 +160,22 @@ scriptfilter.main("{query}")
 		<key>0AF6204E-C31F-4958-AB87-4A3585C12F18</key>
 		<dict>
 			<key>ypos</key>
-			<real>110</real>
+			<real>160</real>
 		</dict>
 		<key>417EDFE4-EEA3-4586-BACB-72B5CD1488FA</key>
 		<dict>
 			<key>ypos</key>
 			<real>110</real>
+		</dict>
+		<key>4765E242-93FF-46C4-87F9-224040053329</key>
+		<dict>
+			<key>ypos</key>
+			<real>240</real>
+		</dict>
+		<key>66C33713-DA10-4119-A3C8-750DB7D93EAA</key>
+		<dict>
+			<key>ypos</key>
+			<real>160</real>
 		</dict>
 	</dict>
 	<key>webaddress</key>
