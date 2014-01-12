@@ -20,33 +20,44 @@ def main(q=""):
 	if search.strip() == "":
 		result = [
 			alp.Item(
-				title="Search INSPIRE",
-				subtitle="Begin typing to search INSPIRE",
-				valid="no",
-				autocomplete=""
+				title 		 = "Search INSPIRE",
+				subtitle	 = "Begin typing to search INSPIRE",
+				valid		 = "no",
+				autocomplete = ""
 			),
 			alp.Item(
-				title="Settings",
-				subtitle="Change ainspire's settings",
-				valid="no",
-				autocomplete="settings" + alfred_delim
+				title 		 = "Settings",
+				subtitle 	 = "Change ainspire's settings",
+				valid 		 = "no",
+				autocomplete = "settings" + alfred_delim
 			)
 		]
 	# Settings menu.
 	elif searchsplit[0] == "settings":
 		result = settings_menu(searchsplit[1:])
-	# Has the string no delimiter? Then perform a regular Inspire search.
+	# If the search has no delimiters the user is still typing the query:
 	elif num_delims == 0:
-		result = query_inspire(search)
-	# Is there one delimiter? Then it's a context menu.
+		result = typing_menu(searchsplit[0])
+	# Has the string one delimiter? Then perform a regular Inspire search.
 	elif num_delims == 1:
-		result = context_menu(search)
-	# Two delimiters? Then it's a author search menu.
+		result = search_inspire(searchsplit[0].strip())
+	# Are there two delimiters? Then it's a context menu.
 	elif num_delims == 2:
-		result = author_menu(search)
+		result = context_menu(searchsplit[1],searchsplit[0])
+	# Three delimiters? Then it's an author search menu.
+	elif num_delims == 3:
+		result = author_menu(searchsplit[2])
 
 	return alp.feedback(result)
 
+
+def typing_menu(search=""):
+	return alp.Item(
+		title="Search INSPIRE for '" + search + "'",
+		subtitle="Action this item to search INSPIRE",
+		valid="no",
+		autocomplete=search + alfred_delim
+	)
 #
 # Functions for accessing and changing settings
 #
@@ -216,7 +227,7 @@ def local_search(search=""):
 
 	import os
 
-	words = search.split(" ")
+	words 	= search.split(" ")
 	mdquery = "true"
 	for word in words:
 		mdquery += ' && kMDItemFSName="*'+word+'*.pdf"c'
@@ -226,33 +237,21 @@ def local_search(search=""):
 		filename = os.path.splitext(os.path.basename(mdfindresult))[0]
 		filenamesplit = filename.split(" - ")
 		fileitems.append(alp.Item(
-			title=filenamesplit[1],
-			subtitle=filenamesplit[0],
-			arg=encode_arguments(
-				type="open",
-				value=mdfindresult
-			),
-			type='file',
-			icon="com.adobe.pdf",
-			fileType=True,
-			uid=mdfindresult
+			title 	 = filenamesplit[1],
+			subtitle = filenamesplit[0],
+			type 	 = 'file',
+			icon 	 = "com.adobe.pdf",
+			fileType = True,
+			uid 	 = mdfindresult,
+			arg 	 = encode_arguments(
+				type 	= "open",
+				value 	= mdfindresult
+			)
 		))
 	return fileitems
 
-def query_inspire(search=""):
+def search_inspire(search=""):
 	"""Searches Inspire."""
-
-	# First check if the search query ends in "." (which marks a full query).
-	# If not, inform the user and offer to complete the query with a full stop.
-	if search[-1] != "." :
-		return local_search(search) + [alp.Item(
-			title="Search INSPIRE for '" + search + "'",
-			subtitle="End the query with a full stop (.) to search INSPIRE",
-			valid="no",
-			autocomplete=search + "."
-		)]
-	else:
-		q = search[:-1]
 
 	import time
 	import shutil
@@ -265,7 +264,7 @@ def query_inspire(search=""):
 	# Path for the temporary latest parsed results.
 	lastf = os.path.join(alp.cache(),"lastresults.json")
 	# Path for the permanent cache of the query. Note the urlsafe encode.
-	savef = os.path.join(alp.storage(),base64.urlsafe_b64encode(q) + ".cache")
+	savef = os.path.join(alp.storage(),base64.urlsafe_b64encode(search) + ".cache")
 
 	# Check if cache file exists, and if it's not older than a week.
 	try:
@@ -287,7 +286,7 @@ def query_inspire(search=""):
 		from bibtexparser.bparser import BibTexParser
 		from pyinspire import pyinspire
 		# Query Inspire and get the result in form of BibTeX.
-		bibtex = pyinspire.get_text_from_inspire(q,"bibtex").encode('utf-8')
+		bibtex = pyinspire.get_text_from_inspire(search,"bibtex").encode('utf-8')
 		# Write the BibTeX to a file.
 		with open(tempf,"w") as f:
 			f.write(bibtex)
@@ -304,17 +303,19 @@ def query_inspire(search=""):
 	shutil.copy(savef,lastf)
 
 	# Parse the result dictionary to alp items.
-	alpitems = map(bibitem_to_alpitem, bibitems)
+	alpitems = []
+	for bibitem in bibitems:
+		alpitems.append(bibitem_to_alpitem(bibitem,search))
 
 	# No results? Then tell the user, and offer to search the Inspire website.
 	if len(alpitems) == 0:
 		import urllib
 		alpitems.append(alp.Item(
-			title="No results",
-			subtitle="Search on the INSPIRE website for '" + q + "'",
+			title 		= "No results",
+			subtitle	= "Search on the INSPIRE website for '" + search + "'",
 			arg=encode_arguments(
-				type='url',
-				value="http://inspirehep.net/search?ln=en&" + urllib.urlencode({'p':q})
+				type  	= 'url',
+				value 	= "http://inspirehep.net/search?ln=en&" + urllib.urlencode({'p':search})
 			)
 		))
 
@@ -322,7 +323,7 @@ def query_inspire(search=""):
 	return alpitems
 
 
-def context_menu(search=""):
+def context_menu(key="",search=""):
 	"""Returns the context menu for a result item"""
 
 	# This method takes only the key (id) of the actioned item as an argument.
@@ -339,9 +340,6 @@ def context_menu(search=""):
 	with open(lastf,"r") as f:
 		items = json.load(f)
 
-	# Get the key from the search query.
-	key = search.split(alfred_delim)[0].strip()
-
 	# Lookup the item from the results.
 	for i in items:
 		if 'id' in i:
@@ -355,10 +353,10 @@ def context_menu(search=""):
 	# Link to the Inspire record page.
 	actions.append(
 		alp.Item(
-			title=item['title'],
-			subtitle="Open Inspire record page in browser",
-			arg=encode_arguments(type='inspirerecord',value=item['id']),
-			uid=bid+"inspirerecord"
+			title 	 = item['title'],
+			subtitle = "Open INSPIRE record page in browser",
+			arg 	 = encode_arguments(type='inspirerecord',value=item['id']),
+			uid 	 = bid+"inspirerecord"
 		)
 	)
 
@@ -367,21 +365,21 @@ def context_menu(search=""):
 	if len(authors) == 1:
 		actions.append(
 			alp.Item(
-				title=item['author'],
-				subtitle="Find more papers of author",
-				valid="no",
-				autocomplete="find a "+ item['author'] + ".",
-				uid=bid+"authors"
+				title 		 = item['author'],
+				subtitle 	 = "Find more papers of author",
+				valid 		 = "no",
+				autocomplete = "find a "+ item['author'] + alfred_delim,
+				uid 		 = bid + "authors"
 			)
 		)
 	else:
 		actions.append(
 			alp.Item(
-				title=authors_to_lastnames(item['author']),
-				subtitle="Find more papers of authors",
-				valid="no",
-				autocomplete=search + " " + item['author'] + alfred_delim,
-				uid=bid+"authors"
+				title 		 = authors_to_lastnames(item['author']),
+				subtitle 	 = "Find more papers of authors",
+				valid 		 = "no",
+				autocomplete = search + alfred_delim + key + alfred_delim + item['author'] + alfred_delim,
+				uid 		 = bid + "authors"
 			)
 		)	
 
@@ -390,10 +388,10 @@ def context_menu(search=""):
 		url = "http://dx.doi.org/" + item['doi']
 		actions.append(
 			alp.Item(
-				title=bibitem_to_journaltext(item),
-				subtitle="Open DOI in browser",
-				arg=encode_arguments(type='url',value=url),
-				uid=bid+"doi"
+				title 	 = bibitem_to_journaltext(item),
+				subtitle = "Open DOI in browser",
+				arg 	 = encode_arguments(type='url',value=url),
+				uid 	 = bid + "doi"
 			)
 		)
 
@@ -412,49 +410,49 @@ def context_menu(search=""):
 		)
 		actions.append(
 			alp.Item(
-				title=prefix + item['eprint'],
-				subtitle="Download and open PDF",
-				arg=encode_arguments(type='getpdf',value=[url,filename]),
-				uid=bid+"arxivpdf"
+				title 	 = prefix + item['eprint'],
+				subtitle = "Download and open PDF",
+				arg 	 = encode_arguments(type='getpdf',value=[url,filename]),
+				uid 	 = bid + "arxivpdf"
 			)
 		)
 
 	# The option to lookup references.
 	actions.append(
 		alp.Item(
-			title="References",
-			subtitle="Find papers that this paper cites",
-			valid="no",
-			autocomplete="citedby:" + key + ".",
-			uid=bid+"refs"
+			title 		 = "References",
+			subtitle	 = "Find papers that this paper cites",
+			valid 		 = "no",
+			autocomplete = "citedby:" + key + alfred_delim,
+			uid 		 = bid + "refs"
 		)
 	)
 
 	# The option to lookup citations.
 	actions.append(
 		alp.Item(
-			title="Citations",
-			subtitle="Find papers that cite this paper",
-			valid="no",
-			autocomplete="refersto:" + key + ".",
-			uid=bid+"cites"
+			title 		 = "Citations",
+			subtitle 	 = "Find papers that cite this paper",
+			valid 		 = "no",
+			autocomplete = "refersto:" + key + alfred_delim,
+			uid 		 = bid + "cites"
 		)
 	)
 
 	# The option to copy the bibtex of the current item to the clipboard.
 	actions.append(
 		alp.Item(
-			title="BibTeX",
-			subtitle="Copy BibTeX to clipboard",
-			arg=encode_arguments(
-				type='clipboard',
-				value=bibitem_to_bibtex(item),
-				notification={
+			title 		= "BibTeX",
+			subtitle	= "Copy BibTeX to clipboard",
+			uid 		= bid+"bibtex",
+			arg 		= encode_arguments(
+				type 		 = 'clipboard',
+				value 		 = bibitem_to_bibtex(item),
+				notification = {
 					'title':'Copied BibTeX to clipboard',
 					'text':'The BibTeX entry for ' + key + ' to the clipboard'
 				}
-			),
-			uid=bid+"bibtex"
+			)
 		)
 	)
 
@@ -462,14 +460,9 @@ def context_menu(search=""):
 	return actions
 
 
-def author_menu(search=""):
+def author_menu(authors=""):
 	"""Returns an Alfred context menu populated with authors"""
 
-	searchsplit = search.split(alfred_delim)
-	# Get the bib id
-	bibid		= searchsplit[0].strip()
-	# Get the string containing all authors.
-	authors 	= searchsplit[1].strip()
 	# Split the string into single authors.
 	authorlist 	= authors.split(" and ")
 
@@ -478,16 +471,16 @@ def author_menu(search=""):
 	for a in authorlist:
 		if a == "others":
 			aitem = alp.Item(
-				title="More authors",
-				subtitle="Open the INSPIRE page for all authors of the paper",
-				arg=encode_arguments(type='inspirerecord',value=bibid)
+				title 	 = "More authors",
+				subtitle = "Open the INSPIRE page for all authors of the paper",
+				arg 	 = encode_arguments(type='inspirerecord',value=bibid)
 			)
 		else:
 			aitem = alp.Item(
-				title=a,
-				subtitle="Find more papers of author",
-				valid="no",
-				autocomplete="find a "+ a + "."
+				title 		 = a,
+				subtitle 	 = "Find more papers of author",
+				valid 		 = "no",
+				autocomplete = "find a "+ a + alfred_delim
 			)
 		actions.append(aitem)
 
@@ -504,7 +497,7 @@ def remove_newlines(bib):
 		bib[key] = bib[key].replace('\n',' ')
 	return bib
 
-def bibitem_to_alpitem(bib):
+def bibitem_to_alpitem(bib, search):
 	"""Converts a dictionary result item to an alp item"""
 
 	# Prepend the year to the subtitle if it's there.
@@ -527,7 +520,7 @@ def bibitem_to_alpitem(bib):
 		title			= bib['title'].replace('\n',' '),
 		subtitle		= subpre + authors_to_lastnames(bib['author']) + subpost,
 		valid			= "no", # This is to fake the contextual menu.
-		autocomplete	= bib['id'] + alfred_delim # Same here.
+		autocomplete	= search + alfred_delim + bib['id'] + alfred_delim # Same here.
 	)
 
 
