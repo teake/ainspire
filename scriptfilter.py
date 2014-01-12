@@ -79,11 +79,11 @@ def main_settings():
     # Option to clear the cache.
     menuitems.append(
         alp.Item(
-            title="Clear INSPIRE cache",
-            subtitle="Clears all cached INSPIRE searches",
-            arg=encode_arguments(
-                type="clearcache",
-                notification={
+            title    = "Clear INSPIRE cache",
+            subtitle = "Clears all cached INSPIRE searches",
+            arg      = encode_arguments(
+                type         = "clearcache",
+                notification = {
                     'title':'Cache cleared',
                     'text':'All saved INSPIRE results have been cleared'
                 }
@@ -94,43 +94,20 @@ def main_settings():
     # Option to change the cache setting
     menuitems.append(
         alp.Item(
-            title="Change cache setting",
-            subtitle="Set the time INSPIRE searches are cached",
-            valid="no",
-            autocomplete="settings" + alfred_delim + "setcache" + alfred_delim
-        )       
-    )
-
-    # Option to toggle the local search
-    local_search_setting = get_local_search_setting()
-    if local_search_setting:
-        titlepre = "Disable"
-        subtitle = "Only give results from INSPIRE"
-    else:
-        titlepre = "Enable"
-        subtitle = "Search local directory for PDFs before completing queries with '.'"
-    menuitems.append(
-        alp.Item(
-            title=titlepre + " local search",
-            subtitle=subtitle,
-            arg=encode_arguments(
-                type="setting",
-                value={'local_search':not local_search_setting},
-                notification={
-                    'title':'Setting changed',
-                    'text':titlepre+'d local search'
-                }
-            )
+            title        = "Change cache setting",
+            subtitle     = "Set the time INSPIRE searches are cached",
+            valid        = "no",
+            autocomplete = "settings" + alfred_delim + "setcache" + alfred_delim
         )       
     )
 
     # Option to change the local directory
     menuitems.append(
         alp.Item(
-            title="Change local directory",
-            subtitle="Set local directory where PDFs are stored and searched",
-            valid="no",
-            autocomplete="settings" + alfred_delim + "setdir" + alfred_delim
+            title        = "Change local directory",
+            subtitle     = "Set local directory where PDFs are stored and searched",
+            valid        = "no",
+            autocomplete = "settings" + alfred_delim + "setdir" + alfred_delim
         )       
     )
 
@@ -139,23 +116,23 @@ def main_settings():
 def set_cache(q=""):
     if q=="":
         return alp.Item(
-            title="Begin typing to set the cache timeout",
-            subtitle="Current value is " + str(get_cache_setting()) + " days",
-            valid="no"
+            title    = "Begin typing to set the cache timeout",
+            subtitle = "Current value is " + str(get_cache_setting()) + " days",
+            valid    = "no"
         )
     try:
         s=str(int(q))
     except:
         s="0"
     return alp.Item(
-        title="Set cache timeout to " + s + " days",
-        subtitle="Current value is " + str(get_cache_setting()) + " days",
-        arg=encode_arguments(
-            type="setting",
-            value={'cache':int(s)},
-            notification={
+        title       = "Set cache timeout to " + s + " days",
+        subtitle    = "Current value is " + str(get_cache_setting()) + " days",
+        arg         = encode_arguments(
+            type         = "setting",
+            value        = {'cache':int(s)},
+            notification = {
                 'title':'Setting changed',
-                'text':'Cache timeout set to ' + s + ' days'
+                'text' :'Cache timeout set to ' + s + ' days'
             }
         )
     )
@@ -169,21 +146,21 @@ def set_local_dir(q=""):
     # Use mdfind to search for a directory within ~/
     if q=="":
         actions.append(alp.Item(
-            title="Begin typing to search for a directory",
-            subtitle="All directories in " + os.path.expanduser("~") +" will be searched",
-            valid="no"
+            title    = "Begin typing to search for a directory",
+            subtitle = "All directories in " + os.path.expanduser("~") +" will be searched",
+            valid    = "no"
         ))
     else:
         mdfindresults = alp.find("-onlyin ~ 'kMDItemFSName=\"*"+q+"*\"c && kMDItemContentType==public.folder'")
         for mdfindresult in mdfindresults:
             actions.append(
                 alp.Item(
-                    title=mdfindresult,
-                    subtitle="Set the local directory to " + mdfindresult,
-                    arg=encode_arguments(
-                        type="setting",
-                        value={'local_dir':mdfindresult},
-                        notification={
+                    title    = mdfindresult,
+                    subtitle = "Set the local directory to " + mdfindresult,
+                    arg      = encode_arguments(
+                        type         = "setting",
+                        value        = {'local_dir':mdfindresult},
+                        notification = {
                             'title':'Setting changed',
                             'text':'Local directory set to ' + mdfindresult
                         }
@@ -193,9 +170,9 @@ def set_local_dir(q=""):
 
     # Also remind the user what the current directory is.
     actions.append(alp.Item(
-        title="Current local directory",
-        subtitle=get_local_dir(),
-        valid="no" 
+        title    = "Current local directory",
+        subtitle = get_local_dir(),
+        valid    = "no" 
     ))
 
     return actions
@@ -208,9 +185,6 @@ def get_local_dir():
     if not os.path.exists(localdir):
         os.makedirs(localdir)
     return localdir
-
-def get_local_search_setting():
-    return settings.get("local_search", default=False)
 
 def get_cache_setting():
     return settings.get("cache", default=7)
