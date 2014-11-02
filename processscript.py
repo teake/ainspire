@@ -20,7 +20,7 @@ def main(q):
         import webbrowser
         webbrowser.open(v)
 
-    # Past to clipboard.
+    # Paste to clipboard.
     elif t == 'clipboard':
         import os
         import alp
@@ -29,13 +29,14 @@ def main(q):
         # First, write the data to a file which 'pbcopy' will read.
         cpf = os.path.join(alp.cache(),"clipboard.txt")
         with open(cpf, "w") as f:
-            f.write(v)
-        # Now call 'pbcopy'.
+            f.write(v.encode('utf8'))
+        # Now call 'pbcopy'. The following envvar must be set so that
+        # pbcopy knows that we're dealing with unicode strings.
+        os.environ["LC_CTYPE"] = "UTF-8"
         subprocess.call('pbcopy < "' + cpf + '"',shell=True)
 
     # Lookup Inspire record.
     elif t == 'inspirerecord':
-
         import urllib
         import webbrowser
         import xml.etree.ElementTree as ET
